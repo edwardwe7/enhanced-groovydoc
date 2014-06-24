@@ -1,13 +1,35 @@
-apply plugin: 'maven'
 apply plugin: 'idea'
 apply plugin: 'groovy'
+apply plugin: 'artifactory'
+apply plugin: 'maven'
 
 group 'org.codehaus.groovy'
-version = '0.6'
+version = '0.6.1'
+
+buildscript {
+  repositories {
+    maven {
+      url "${artifactory_contextUrl}/libs-release"
+      credentials {
+        username "$artifactory_user"
+        password "$artifactory_password"
+      }
+    }
+  }
+
+  dependencies {
+    classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:2.0.10'
+  }
+}
 
 repositories {
-    mavenLocal()
-    mavenCentral()
+  maven {
+    url "${artifactory_contextUrl}/libs-release"
+    credentials {
+      username "$artifactory_user"
+      password "$artifactory_password"
+    }
+  }
 }
 
 dependencies {
@@ -19,5 +41,22 @@ dependencies {
     compile 'org.freehep:freehep-graphicsio-pdf:2.1.2' 
     compile 'org.freehep:freehep-graphicsio-ps:2.1.2' 
     compile 'org.freehep:freehep-graphicsio-svg:2.1.2' 
-    compile 'org.freehep:freehep-graphicsio-swf:2.1.2' 
+    compile 'org.freehep:freehep-graphicsio-swf:2.1.2'
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
+}
+
+artifactory {
+  publish {
+    contextUrl = "$artifactory_contextUrl"
+    repository {
+      repoKey = 'libs-release-local'
+      username = "$artifactory_user"
+      password = "$artifactory_password"
+      ivy {
+        ivyLayout = '[organization]/[module]/[revision]/ivy-[revision](-[classifier]).xml'
+        artifactLayout = '[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]'
+        mavenCompatible = true
+      }
+    }
+  }
 }
